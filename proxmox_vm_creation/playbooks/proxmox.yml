@@ -1,0 +1,76 @@
+---
+- name: Lalala
+  hosts: localhost
+  #gather_facts: false
+  connection: local
+  #vars_files:
+    #- ../../../.creds.yml
+  tasks:
+    - name: install proxmoxer
+      pip:
+        name: proxmoxer
+
+    - name: Replace proxmox.py&&proxmox_kvm.py
+      become: true
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: 'files/proxmox.py', dest: '/usr/lib/python2.7/site-packages/ansible/modules/cloud/misc/proxmox.py'}
+        - { src: 'files/proxmox_kvm.py', dest: '/usr/lib/python2.7/site-packages/ansible/modules/cloud/misc/proxmox_kvm.py'}
+
+    - name: Create VM
+      proxmox_kvm:
+        node: m11266
+        api_user: "{{ api_user }}"
+        api_password: "{{ api_password }}"
+        api_host: m11266.contaboserver.net
+        name: "test-001"
+        full:  yes
+        net: '{"ip": "10.51.21.42/24"}'
+        clone: centos-template
+        timeout: 50
+      register: proxmox
+  
+
+
+    - name: Creation results
+      debug:
+        var: proxmox['vmid']
+
+    #  with_inventory_hostnames:
+    #    - database
+
+    #- name: Create Inventory
+    #  tower_inventory:
+    #    name: "for_timur_role"
+    #    description: "For DEvelopers"
+    #    organization: "OTUS"
+    #    state: present
+
+    #- name: Create Group
+    #  tower_group: 
+    #    inventory: "for_timur_role" 
+    #    name:  "{{ item }}"
+    #  with_items:
+    #    - "{{group_names}}" 
+    #  register: fs_group
+    
+    #- name: Create Host
+    #  tower_host:
+    #    inventory: "Foo Inventory" 
+    #    name: "host"  
+    #  register: fs_host
+    #  wheh: fs_group
+
+    #- name: Associate host group 
+    #  shell: tower-cli host associate  --host "{{fs_host.id}}" --group "> {{fs_group.id}}"
+    #- name: Print groups
+    #  debug: 
+    #    msg: "{{ item }}"
+    #  with_items:
+    #    - "{{group_names}}"
+      
+    #- name: Print groups2
+    #  debug: 
+    #    var: "{{ groups }}"

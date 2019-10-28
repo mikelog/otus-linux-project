@@ -1,0 +1,6 @@
+*.vagrant
+*.vdi
+*.log
+*.vscode
+atlassian*.bin
+
