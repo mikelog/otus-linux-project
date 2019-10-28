@@ -1,0 +1,8 @@
+---
+# tasks file for kuber
+- name: Resolve dependencies
+  include: kube-dependencies.yml
+- name: Work with master
+  include: master.yml
+- name: Work with workers
+  include: workers.yml

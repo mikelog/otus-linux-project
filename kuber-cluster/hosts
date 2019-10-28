@@ -1,0 +1,14 @@
+[masters]
+<<<<<<< HEAD
+master ansible_host=10.51.21.42 ansible_user=otus
+[workers]
+worker1 ansible_host=10.51.21.43 ansible_user=otus
+worker2 ansible_host=10.51.21.44 ansible_user=otus
+=======
+master ansible_host=10.51.21.42
+[workers]
+worker1 ansible_host=10.51.21.43
+worker2 ansible_host=10.51.21.44
+[proxmoxs]
+proxmox ansible_host=207.180.210.166
+>>>>>>> b7f8a5833c1de30d0968ca3f287f5f329766c09c

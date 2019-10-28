@@ -1,0 +1,72 @@
+- name: Initial setup VM
+  hosts: localhost
+  vars_files:
+    - vars/kuber-cluster.yml
+  connection: local
+  tasks:
+    - name: Clone VMs
+      proxmox_kvm:
+        node: "{{ node }}"
+        name: "{{ item.value.name }}"
+        newid: "{{ item.value.vmid }}"
+        api_user: "{{ api_user }}"
+        api_password: "{{ api_password }}"
+        api_host: "{{ api_host }}"
+        clone: "{{ clone_vm }}"
+        full: yes
+        timeout: 50
+      loop: "{{ lookup('dict', vms) }}"
+
+#- name: Update ip adresses
+#  hosts: proxmox
+#  vars_files:
+#    - vars/kuber-cluster.yml
+#  become: yes
+#  become_user: loginov
+#  tasks:
+#    - name: Set IP addresses
+#      command: "/usr/sbin/qm set {{ item.value.vmid }}  --ipconfig0 ip={{ item.value.ipaddress }},gw=10.21.21.254"
+#      loop: "{{ lookup('dict', vms) }}"
+
+    #- name: Store SSH keys temporarily
+    #  copy:
+    #    src: "{{ ssh_keys_dir }}/"
+    #    dest: "{{ temp_keys_dir }}"
+
+    #- name: Set SSH keys
+    #  command: "qm set {{ item.value.vmid }} --sshkey {{ temp_keys_dir }}/devlab.pub"
+    #  loop: "{{ lookup('dict', vms, wantlist=True) }}"
+
+    #- name: Set name server
+    #  command: "qm set {{ item.value.vmid }} --nameserver 10.21.21.90"
+    #  loop: "{{ lookup('dict', vms, wantlist=True) }}"
+#- name: Continue configuring vms
+#  hosts: localhost
+#  vars_files:
+#    - vars/kuber-cluster.yml
+#  connection: local
+#  tasks:
+#    - name: Update VMs
+#      proxmox_kvm:
+#        api_host:     "{{ api_host }}"
+#        api_user:     "{{ api_user }}"
+#        api_password: "{{ api_password }}"
+#        cores:        "{{ item.value.cores }}"
+#        sockets:      "{{ item.value.sockets }}"
+#        memory:       "{{ item.value.memory }}"
+#        update:       yes
+#        vmid:         "{{ item.value.vmid }}"
+#        node:         "{{ node }}"
+#        name:         "{{ item.value.name }}"
+#      loop: "{{ lookup('dict', vms) }}"
+#
+#    - name: Start VMs
+#     proxmox_kvm:
+#        api_host:     "{{ api_host }}"
+#        api_password: "{{ api_password }}"
+#        api_user:     "{{ api_user }}"
+#        vmid:         "{{ item.value.vmid }}"
+#        node:         "{{ node }}"
+#        state:        started
+#      loop: "{{ lookup('dict', vms) }}"
+

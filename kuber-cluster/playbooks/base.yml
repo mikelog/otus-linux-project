@@ -1,0 +1,14 @@
+---
+- name: Check && install python
+  hosts: all:!proxmox
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Debug port22
+      debug:
+        var: port22['unreachable']
+
+    - name: Install python for Ansible if it doesn't exists
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum -y update && yum install -y python-minimal)
+     

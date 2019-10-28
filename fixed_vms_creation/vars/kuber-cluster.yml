@@ -1,0 +1,27 @@
+api_host: m11266.contaboserver.net
+node: m11266
+clone_vm: centos-template
+temp_keys_dir: ~/.ssh/temp_keys
+ssh_keys_dir: ~/.ssh
+vms:
+  master1:
+    name: master
+    ipaddress: 10.51.21.42/24
+    vmid: 200
+    cores: 2
+    sockets: 1
+    memory: 2048
+  worker1:
+    name: worker1
+    ipaddress: 10.51.21.43/24
+    vmid: 201
+    cores: 2
+    sockets: 1
+    memory: 8192
+  worker2:
+    name: worker2
+    ipaddress: 10.51.21.44/24
+    vmid: 202
+    cores: 2
+    sockets: 1
+    memory: 8192

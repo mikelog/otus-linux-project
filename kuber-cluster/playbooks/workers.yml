@@ -1,0 +1,61 @@
+- hosts: master
+  become: yes
+  become_user: "{{ ansible_user }}"
+  gather_facts: false
+  tasks:
+    - name: get join command
+      shell: kubeadm token create --print-join-command
+      register: join_command_raw
+    
+    #- name: debug get join command
+    #  debug:
+    #    msg: "{{ join_command_raw }}"
+
+    - name: set join command
+      copy:
+        content: "{{ join_command_raw.stdout_lines[0] }}" 
+        dest: /tmp/join_command
+    
+    - name: get join_command
+      fetch:
+        src: /tmp/join_command
+        dest: ../files/join_command
+      
+    #- name: Debug set join command
+    #  debug:
+    #    msg: "{{ join_command_raw.stdout_lines[0] }}"
+
+- hosts: worker1
+  become: yes
+  tasks:
+    - name: SetHostname
+      hostname:
+        name: worker1
+
+- hosts: worker2
+  become: yes
+  tasks:
+    - name: SetHostname
+      hostname:
+        name: worker2
+  
+
+- hosts: workers
+  vars:
+    join_command: "{{ lookup('file','../files/join_command/master/tmp/join_command') }} "
+  become: yes
+  tasks:
+    #- name: debug join_command_from_file
+    #  debug:
+    #    msg: "{{ join_command }}"
+
+    - name: join cluster
+      shell: "{{ join_command }} --ignore-preflight-errors all  >> node_joined.txt"
+      args:
+        chdir: $HOME
+        creates: node_joined.txt
+      register: join_cluster
+
+    - name: Debug joinning cluster
+      debug:
+        msg: "{{ join_cluster }}"

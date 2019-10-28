@@ -1,0 +1,8 @@
+---
+- import_playbook: base.yml
+- import_playbook: kuber-dependencies.yml
+- import_playbook: master.yml
+- import_playbook: workers.yml
+
+
+

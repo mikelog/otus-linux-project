@@ -1,0 +1,132 @@
+- hosts: all:!proxmox
+  become: yes
+  tasks:
+    #- name: Disable Firewall
+    #  systemd:
+    #    name: firewalld
+    #    state: stopped
+    #    enabled: false
+    - name: Configure firewallD
+      command: "{{ item }}"
+      ignore_errors: yes
+      with_items:
+        - systemctl restart firewalld
+        - firewall-cmd --zone=public --add-service=ssh --permanent
+        - firewall-cmd --permanent --add-port=6443/tcp
+        - firewall-cmd --permanent --add-port=2379-2380/tcp
+        - firewall-cmd --permanent --add-port=10250/tcp
+        - firewall-cmd --permanent --add-port=10251/tcp
+        - firewall-cmd --permanent --add-port=10252/tcp
+        - firewall-cmd --permanent --add-port=10255/tcp
+        - firewall-cmd --permanent --add-port=8472/udp
+        - firewall-cmd --add-masquerade --permanent
+        - firewall-cmd --permanent --add-port=30000-32767/tcp
+        - systemctl restart firewalld
+
+    - name: Remove swapfile from /etc/fstab
+      mount:
+        name: swap
+        fstype: swap
+        state: absent
+
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+        
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Add sudoers users to wheel group
+      user: name="{{ ansible_user }}" groups=wheel append=yes state=present createhome=yes
+    
+    #- name: Set up authorized keys for the deployer user
+    #  authorized_key: user="{{ ansible_user }}" key="{{item}}"
+    #  with_file:
+    #    - /home/we/.ssh/id_rsa.pub
+
+    - name: install Docker
+      yum:
+        name: docker
+        state: present
+        update_cache: true
+    
+    - name: enable docker
+      systemd:
+        name: docker
+        enabled: yes
+
+    - name: Copy /etc/hosts
+      copy:
+        src: ../files/hosts
+        dest: /etc/hosts
+
+    - name: start Docker
+      service:
+        name: docker
+        state: started
+
+    - name: disable SELinux
+      command: setenforce 0
+
+    - name: disable SELinux on reboot
+      selinux:
+        state: disabled
+
+    - name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
+      sysctl:
+        name: net.bridge.bridge-nf-call-ip6tables
+        value: "1"
+        state: present
+
+    - name: ensure net.bridge.bridge-nf-call-iptables is set to 1
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: "1"
+        state: present
+
+    - name: add Kubernetes' YUM repository
+      yum_repository:
+        name: Kubernetes
+        description: Kubernetes YUM repository
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        gpgcheck: yes
+
+    - name: install kubelet
+      yum:
+        name: kubelet-1.14.0
+        state: present
+        update_cache: true
+
+    - name: install kubeadm
+      yum:
+        name: kubeadm-1.14.0
+        state: present
+
+    - name: start kubelet
+      service:
+        name: kubelet
+        enabled: yes
+        state: started
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: Set HostName
+      hostname:
+        name: master
+    - name: install kubectl
+      yum:
+        name: kubectl-1.14.0
+        state: present
+        allow_downgrade: yes
